@@ -23,6 +23,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   final _passwordController = TextEditingController();
   
   late AnimationController _animationController;
+  late AnimationController _glowController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
@@ -34,9 +35,14 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   void _initAnimations() {
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
+
+    _glowController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    )..repeat(reverse: true);
 
     _fadeAnimation = Tween<double>(
       begin: 0.0,
@@ -60,6 +66,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   @override
   void dispose() {
     _animationController.dispose();
+    _glowController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -113,6 +120,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       body: Stack(
@@ -130,63 +138,114 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     children: [
                       const SizedBox(height: 60),
                       
-                      // Logo
+                      // Futuristic Logo
                       Hero(
                         tag: 'app_logo',
-                        child: Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [
-                                AppTheme.primaryPink,
-                                AppTheme.accentPurple,
-                              ],
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.primaryPink.withOpacity(0.3),
-                                blurRadius: 20,
-                                spreadRadius: 5,
+                        child: AnimatedBuilder(
+                          animation: _glowController,
+                          builder: (context, child) {
+                            return Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: LinearGradient(
+                                  colors: [
+                                    AppTheme.neonBlue,
+                                    AppTheme.neonPurple,
+                                    AppTheme.neonPink,
+                                  ],
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppTheme.neonBlue.withOpacity(0.4 + _glowController.value * 0.3),
+                                    blurRadius: 30 + _glowController.value * 20,
+                                    spreadRadius: 5 + _glowController.value * 5,
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.local_florist,
-                            size: 50,
-                            color: Colors.white,
-                          ),
+                              child: Container(
+                                margin: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: isDark ? AppTheme.darkSpace : Colors.white,
+                                ),
+                                child: Icon(
+                                  Icons.local_florist_rounded,
+                                  size: 60,
+                                  color: AppTheme.neonBlue,
+                                  shadows: [
+                                    Shadow(
+                                      color: AppTheme.neonBlue.withOpacity(0.8),
+                                      blurRadius: 15,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
                       
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 40),
                       
                       // Welcome Text
                       Text(
                         l10n.welcome,
                         style: theme.textTheme.displayMedium?.copyWith(
                           fontWeight: FontWeight.bold,
+                          foreground: Paint()
+                            ..shader = AppTheme.neonGradient.createShader(
+                              const Rect.fromLTWH(0, 0, 300, 70),
+                            ),
                         ),
                         textAlign: TextAlign.center,
                       ),
                       
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
                       
                       Text(
-                        'سجل دخولك للاستمتاع بأجمل باقات الورود',
+                        'ادخل إلى عالم المستقبل من باقات الورود',
                         style: theme.textTheme.bodyLarge?.copyWith(
-                          color: theme.colorScheme.onBackground.withOpacity(0.7),
+                          color: (isDark ? AppTheme.holographicWhite : AppTheme.metallicGray)
+                              .withOpacity(0.7),
                         ),
                         textAlign: TextAlign.center,
                       ),
                       
-                      const SizedBox(height: 48),
+                      const SizedBox(height: 60),
                       
-                      // Login Form
-                      Card(
+                      // Login Form with Glassmorphism
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(32),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: isDark
+                                ? [
+                                    AppTheme.metallicGray.withOpacity(0.3),
+                                    AppTheme.darkSpace.withOpacity(0.3),
+                                  ]
+                                : [
+                                    Colors.white.withOpacity(0.3),
+                                    Colors.white.withOpacity(0.1),
+                                  ],
+                          ),
+                          border: Border.all(
+                            color: AppTheme.neonBlue.withOpacity(0.3),
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.neonBlue.withOpacity(0.1),
+                              blurRadius: 20,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
                         child: Padding(
-                          padding: const EdgeInsets.all(24),
+                          padding: const EdgeInsets.all(32),
                           child: Form(
                             key: _formKey,
                             child: Column(
@@ -195,7 +254,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                   controller: _emailController,
                                   label: l10n.email,
                                   keyboardType: TextInputType.emailAddress,
-                                  prefixIcon: Icons.email_outlined,
+                                  prefixIcon: Icons.email_rounded,
                                   validator: (value) {
                                     if (value?.isEmpty ?? true) {
                                       return 'يرجى إدخال البريد الإلكتروني';
@@ -208,13 +267,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                   },
                                 ),
                                 
-                                const SizedBox(height: 16),
+                                const SizedBox(height: 24),
                                 
                                 AuthTextField(
                                   controller: _passwordController,
                                   label: l10n.password,
                                   isPassword: true,
-                                  prefixIcon: Icons.lock_outline,
+                                  prefixIcon: Icons.lock_rounded,
                                   validator: (value) {
                                     if (value?.isEmpty ?? true) {
                                       return 'يرجى إدخال كلمة المرور';
@@ -226,31 +285,69 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                   },
                                 ),
                                 
-                                const SizedBox(height: 24),
+                                const SizedBox(height: 32),
                                 
-                                // Login Button
+                                // Futuristic Login Button
                                 Consumer<AuthProvider>(
                                   builder: (context, authProvider, child) {
-                                    return SizedBox(
-                                      width: double.infinity,
-                                      height: 50,
-                                      child: ElevatedButton(
-                                        onPressed: authProvider.isLoading 
-                                            ? null 
-                                            : _handleLogin,
-                                        child: authProvider.isLoading
-                                            ? const SizedBox(
-                                                width: 20,
-                                                height: 20,
-                                                child: CircularProgressIndicator(
-                                                  strokeWidth: 2,
-                                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                                    Colors.white,
-                                                  ),
+                                    return AnimatedBuilder(
+                                      animation: _glowController,
+                                      builder: (context, child) {
+                                        return Container(
+                                          width: double.infinity,
+                                          height: 56,
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                AppTheme.neonBlue,
+                                                AppTheme.neonPurple,
+                                              ],
+                                            ),
+                                            borderRadius: BorderRadius.circular(28),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: AppTheme.neonBlue.withOpacity(
+                                                  0.4 + _glowController.value * 0.3,
                                                 ),
-                                              )
-                                            : Text(l10n.login),
-                                      ),
+                                                blurRadius: 15 + _glowController.value * 10,
+                                                spreadRadius: 2,
+                                              ),
+                                            ],
+                                          ),
+                                          child: ElevatedButton(
+                                            onPressed: authProvider.isLoading 
+                                                ? null 
+                                                : _handleLogin,
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.transparent,
+                                              shadowColor: Colors.transparent,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(28),
+                                              ),
+                                            ),
+                                            child: authProvider.isLoading
+                                                ? const SizedBox(
+                                                    width: 24,
+                                                    height: 24,
+                                                    child: CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                                        Colors.white,
+                                                      ),
+                                                    ),
+                                                  )
+                                                : Text(
+                                                    l10n.login,
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 18,
+                                                      fontWeight: FontWeight.bold,
+                                                      letterSpacing: 1,
+                                                    ),
+                                                  ),
+                                          ),
+                                        );
+                                      },
                                     );
                                   },
                                 ),
@@ -260,14 +357,25 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                   builder: (context, authProvider, child) {
                                     if (authProvider.errorMessage != null) {
                                       return Padding(
-                                        padding: const EdgeInsets.only(top: 16),
-                                        child: Text(
-                                          authProvider.errorMessage!,
-                                          style: TextStyle(
-                                            color: theme.colorScheme.error,
-                                            fontSize: 14,
+                                        padding: const EdgeInsets.only(top: 20),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(16),
+                                          decoration: BoxDecoration(
+                                            color: Colors.red.withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(16),
+                                            border: Border.all(
+                                              color: Colors.red.withOpacity(0.3),
+                                            ),
                                           ),
-                                          textAlign: TextAlign.center,
+                                          child: Text(
+                                            authProvider.errorMessage!,
+                                            style: TextStyle(
+                                              color: Colors.red,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
                                         ),
                                       );
                                     }
@@ -280,24 +388,25 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         ),
                       ),
                       
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 32),
                       
                       // Social Login
                       Text(
-                        'أو سجل دخولك باستخدام',
+                        'أو ادخل باستخدام',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onBackground.withOpacity(0.6),
+                          color: (isDark ? AppTheme.holographicWhite : AppTheme.metallicGray)
+                              .withOpacity(0.6),
                         ),
                         textAlign: TextAlign.center,
                       ),
                       
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 24),
                       
                       Row(
                         children: [
                           Expanded(
                             child: SocialLoginButton(
-                              icon: Icons.g_mobiledata,
+                              icon: Icons.g_mobiledata_rounded,
                               label: 'Google',
                               onPressed: _handleGoogleSignIn,
                               backgroundColor: Colors.white,
@@ -307,7 +416,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           const SizedBox(width: 16),
                           Expanded(
                             child: SocialLoginButton(
-                              icon: Icons.apple,
+                              icon: Icons.apple_rounded,
                               label: 'Apple',
                               onPressed: _handleAppleSignIn,
                               backgroundColor: Colors.black,
@@ -317,7 +426,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         ],
                       ),
                       
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 40),
                       
                       // Register Link
                       Row(
@@ -325,22 +434,41 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         children: [
                           Text(
                             'ليس لديك حساب؟ ',
-                            style: theme.textTheme.bodyMedium,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: isDark ? AppTheme.holographicWhite : AppTheme.metallicGray,
+                            ),
                           ),
-                          TextButton(
-                            onPressed: () {
+                          GestureDetector(
+                            onTap: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(
-                                  builder: (context) => const RegisterPage(),
+                                PageRouteBuilder(
+                                  pageBuilder: (context, animation, secondaryAnimation) =>
+                                      const RegisterPage(),
+                                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                    return SlideTransition(
+                                      position: Tween<Offset>(
+                                        begin: const Offset(1.0, 0.0),
+                                        end: Offset.zero,
+                                      ).animate(CurvedAnimation(
+                                        parent: animation,
+                                        curve: Curves.easeInOutCubic,
+                                      )),
+                                      child: child,
+                                    );
+                                  },
                                 ),
                               );
                             },
                             child: Text(
                               l10n.register,
                               style: TextStyle(
-                                color: AppTheme.primaryPink,
+                                foreground: Paint()
+                                  ..shader = AppTheme.neonGradient.createShader(
+                                    const Rect.fromLTWH(0, 0, 100, 20),
+                                  ),
                                 fontWeight: FontWeight.bold,
+                                fontSize: 16,
                               ),
                             ),
                           ),

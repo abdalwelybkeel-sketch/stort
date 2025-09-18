@@ -13,6 +13,7 @@ import '../widgets/category_card.dart';
 import '../widgets/product_card.dart';
 import '../widgets/home_app_bar.dart';
 import '../widgets/search_bar_widget.dart';
+import '../widgets/futuristic_bottom_nav.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -23,8 +24,10 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late AnimationController _animationController;
+  late AnimationController _glowController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  int _currentNavIndex = 0;
 
   final List<String> _bannerImages = [
     'https://images.pexels.com/photos/1070850/pexels-photo-1070850.jpeg',
@@ -36,25 +39,25 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     {
       'name': 'باقات الحب',
       'icon': Icons.favorite,
-      'color': AppTheme.primaryPink,
+      'color': AppTheme.neonPink,
       'image': 'https://images.pexels.com/photos/1070850/pexels-photo-1070850.jpeg',
     },
     {
       'name': 'باقات الزفاف',
       'icon': Icons.celebration,
-      'color': AppTheme.lightPurple,
+      'color': AppTheme.neonPurple,
       'image': 'https://images.pexels.com/photos/1022385/pexels-photo-1022385.jpeg',
     },
     {
       'name': 'باقات التخرج',
       'icon': Icons.school,
-      'color': AppTheme.accentPurple,
+      'color': AppTheme.neonBlue,
       'image': 'https://images.pexels.com/photos/1181534/pexels-photo-1181534.jpeg',
     },
     {
       'name': 'باقات المناسبات',
       'icon': Icons.cake,
-      'color': AppTheme.roseGold,
+      'color': AppTheme.cyberYellow,
       'image': 'https://images.pexels.com/photos/1070850/pexels-photo-1070850.jpeg',
     },
   ];
@@ -68,9 +71,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   void _initAnimations() {
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
+
+    _glowController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat(reverse: true);
 
     _fadeAnimation = Tween<double>(
       begin: 0.0,
@@ -105,6 +113,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   void dispose() {
     _animationController.dispose();
+    _glowController.dispose();
     super.dispose();
   }
 
@@ -114,6 +123,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
+      extendBody: true,
       body: Stack(
         children: [
           const AnimatedBackground(),
@@ -132,7 +142,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     // Search Bar
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(20),
                         child: SearchBarWidget(
                           onSearch: (query) {
                             Navigator.pushNamed(
@@ -148,63 +158,92 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     // Banner Carousel
                     SliverToBoxAdapter(
                       child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        margin: const EdgeInsets.symmetric(horizontal: 20),
                         child: CarouselSlider(
                           options: CarouselOptions(
-                            height: 200,
+                            height: 220,
                             autoPlay: true,
                             enlargeCenterPage: true,
                             viewportFraction: 0.9,
                             autoPlayInterval: const Duration(seconds: 4),
+                            autoPlayCurve: Curves.easeInOutCubic,
                           ),
                           items: _bannerImages.map((image) {
-                            return Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 5),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppTheme.primaryPink.withOpacity(0.3),
-                                    blurRadius: 10,
-                                    spreadRadius: 2,
+                            return AnimatedBuilder(
+                              animation: _glowController,
+                              builder: (context, child) {
+                                return Container(
+                                  margin: const EdgeInsets.symmetric(horizontal: 8),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(28),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppTheme.neonBlue.withOpacity(
+                                          0.3 + _glowController.value * 0.2,
+                                        ),
+                                        blurRadius: 20 + _glowController.value * 10,
+                                        spreadRadius: 2,
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(16),
-                                child: Stack(
-                                  fit: StackFit.expand,
-                                  children: [
-                                    Image.network(
-                                      image,
-                                      fit: BoxFit.cover,
-                                    ),
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topCenter,
-                                          end: Alignment.bottomCenter,
-                                          colors: [
-                                            Colors.transparent,
-                                            Colors.black.withOpacity(0.5),
-                                          ],
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(28),
+                                    child: Stack(
+                                      fit: StackFit.expand,
+                                      children: [
+                                        Image.network(
+                                          image,
+                                          fit: BoxFit.cover,
                                         ),
-                                      ),
-                                    ),
-                                    Positioned(
-                                      bottom: 20,
-                                      right: 20,
-                                      child: Text(
-                                        'عروض خاصة على باقات الورود',
-                                        style: theme.textTheme.headlineSmall?.copyWith(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              begin: Alignment.topCenter,
+                                              end: Alignment.bottomCenter,
+                                              colors: [
+                                                Colors.transparent,
+                                                Colors.black.withOpacity(0.7),
+                                              ],
+                                            ),
+                                          ),
                                         ),
-                                      ),
+                                        // Holographic overlay
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                              colors: [
+                                                AppTheme.neonBlue.withOpacity(0.1),
+                                                AppTheme.neonPurple.withOpacity(0.1),
+                                                AppTheme.neonPink.withOpacity(0.1),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        Positioned(
+                                          bottom: 24,
+                                          right: 24,
+                                          left: 24,
+                                          child: Text(
+                                            'عروض خاصة على باقات الورود المستقبلية',
+                                            style: theme.textTheme.headlineSmall?.copyWith(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              shadows: [
+                                                Shadow(
+                                                  color: AppTheme.neonBlue.withOpacity(0.5),
+                                                  blurRadius: 10,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                              ),
+                                  ),
+                                );
+                              },
                             );
                           }).toList(),
                         ),
@@ -214,19 +253,23 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     // Categories Section
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(20),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'الفئات',
+                              'الفئات المستقبلية',
                               style: theme.textTheme.headlineMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
+                                foreground: Paint()
+                                  ..shader = AppTheme.neonGradient.createShader(
+                                    const Rect.fromLTWH(0, 0, 200, 70),
+                                  ),
                               ),
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 20),
                             SizedBox(
-                              height: 120,
+                              height: 140,
                               child: ListView.builder(
                                 scrollDirection: Axis.horizontal,
                                 itemCount: _categories.length,
@@ -256,7 +299,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     // Featured Products
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -264,17 +307,32 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                               'المنتجات المميزة',
                               style: theme.textTheme.headlineMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
+                                foreground: Paint()
+                                  ..shader = AppTheme.neonGradient.createShader(
+                                    const Rect.fromLTWH(0, 0, 200, 70),
+                                  ),
                               ),
                             ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pushNamed(context, '/products');
-                              },
-                              child: Text(
-                                'عرض الكل',
-                                style: TextStyle(
-                                  color: AppTheme.primaryPink,
-                                  fontWeight: FontWeight.w600,
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20),
+                                gradient: LinearGradient(
+                                  colors: [
+                                    AppTheme.neonBlue.withOpacity(0.1),
+                                    AppTheme.neonPurple.withOpacity(0.1),
+                                  ],
+                                ),
+                              ),
+                              child: TextButton(
+                                onPressed: () {
+                                  Navigator.pushNamed(context, '/products');
+                                },
+                                child: Text(
+                                  'عرض الكل',
+                                  style: TextStyle(
+                                    color: AppTheme.neonBlue,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
                             ),
@@ -287,11 +345,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     Consumer<ProductsProvider>(
                       builder: (context, productsProvider, child) {
                         if (productsProvider.isLoading) {
-                          return const SliverToBoxAdapter(
+                          return SliverToBoxAdapter(
                             child: Center(
                               child: Padding(
-                                padding: EdgeInsets.all(32),
-                                child: CircularProgressIndicator(),
+                                padding: const EdgeInsets.all(40),
+                                child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    AppTheme.neonBlue,
+                                  ),
+                                  strokeWidth: 3,
+                                ),
                               ),
                             ),
                           );
@@ -306,15 +369,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           return SliverToBoxAdapter(
                             child: Center(
                               child: Padding(
-                                padding: const EdgeInsets.all(32),
+                                padding: const EdgeInsets.all(40),
                                 child: Column(
                                   children: [
                                     Icon(
                                       Icons.local_florist_outlined,
-                                      size: 64,
+                                      size: 80,
                                       color: theme.colorScheme.onBackground.withOpacity(0.5),
                                     ),
-                                    const SizedBox(height: 16),
+                                    const SizedBox(height: 20),
                                     Text(
                                       'لا توجد منتجات مميزة حالياً',
                                       style: theme.textTheme.bodyLarge?.copyWith(
@@ -329,13 +392,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         }
 
                         return SliverPadding(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(20),
                           sliver: SliverGrid(
                             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2,
                               childAspectRatio: 0.75,
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 16,
+                              crossAxisSpacing: 20,
+                              mainAxisSpacing: 20,
                             ),
                             delegate: SliverChildBuilderDelegate(
                               (context, index) {
@@ -358,9 +421,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       },
                     ),
 
-                    // Bottom Spacing
+                    // Bottom Spacing for Navigation
                     const SliverToBoxAdapter(
-                      child: SizedBox(height: 100),
+                      child: SizedBox(height: 120),
                     ),
                   ],
                 ),
@@ -369,26 +432,35 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ),
         ],
       ),
-      floatingActionButton: Consumer<CartProvider>(
-        builder: (context, cartProvider, child) {
-          if (cartProvider.itemCount == 0) return const SizedBox.shrink();
-          
-          return FloatingActionButton.extended(
-            onPressed: () {
-              Navigator.pushNamed(context, AppConfig.cartRoute);
-            },
-            backgroundColor: AppTheme.primaryPink,
-            icon: const Icon(Icons.shopping_cart, color: Colors.white),
-            label: Text(
-              '${cartProvider.itemCount}',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          );
+      bottomNavigationBar: FuturisticBottomNav(
+        currentIndex: _currentNavIndex,
+        onTap: (index) {
+          setState(() {
+            _currentNavIndex = index;
+          });
+          _handleNavigation(index);
         },
       ),
     );
+  }
+
+  void _handleNavigation(int index) {
+    switch (index) {
+      case 0:
+        // Already on home
+        break;
+      case 1:
+        Navigator.pushNamed(context, '/products');
+        break;
+      case 2:
+        Navigator.pushNamed(context, AppConfig.cartRoute);
+        break;
+      case 3:
+        Navigator.pushNamed(context, AppConfig.ordersRoute);
+        break;
+      case 4:
+        Navigator.pushNamed(context, AppConfig.profileRoute);
+        break;
+    }
   }
 }
